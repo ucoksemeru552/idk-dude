@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doorprize Registration</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input, button { margin: 10px; padding: 10px; }
+        #admin-section { display: none; margin-top: 20px; }
+        table { margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid #000; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+
+<h1>Doorprize Registration</h1>
+<div id="registration">
+    <input type="text" id="name" placeholder="Name">
+    <input type="number" id="rt" placeholder="RT Number">
+    <button onclick="registerUser()">Register</button>
+</div>
+
+<h2>Admin Login</h2>
+<input type="password" id="adminPassword" placeholder="Password">
+<button onclick="loginAdmin()">Login</button>
+
+<div id="admin-section">
+    <h2>Registered Users</h2>
+    <button onclick="exportToCSV()">Export to CSV</button>
+    <table id="userTable">
+        <thead>
+            <tr><th>Name</th><th>RT Number</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Spin the Wheel</h2>
+    <button onclick="spinWheel()">Spin</button>
+    <p id="winner"></p>
+</div>
+
+<script>
+let users = [];
+let adminLoggedIn = false;
+const adminPass = '123';
+
+function registerUser() {
+    const name = document.getElementById('name').value.trim();
+    let rt = document.getElementById('rt').value.trim();
+    if(!name || !rt) { alert('Fill all fields'); return; }
+    rt = parseInt(rt, 10);
+
+    if(!adminLoggedIn) {
+        // check duplicates
+        const exists = users.some(u => u.name.toLowerCase() === name.toLowerCase() && u.rt === rt);
+        if(exists) {
+            alert(`Name ${name} and RT ${rt} already registered!`);
+            return;
+        } else {
+            users.push({ name, rt });
+            alert('Successfully Registered, you may close this page now.');
+            window.location.href = 'about:blank';
+        }
+    } else {
+        // admin can register multiple
+        users.push({ name, rt });
+        updateTable();
+        alert(`Registered ${name} (RT ${rt}) successfully.`);
+    }
+
+    document.getElementById('name').value = '';
+    document.getElementById('rt').value = '';
+}
+
+function loginAdmin() {
+    const pass = document.getElementById('adminPassword').value;
+    if(pass === adminPass) {
+        adminLoggedIn = true;
+        document.getElementById('admin-section').style.display = 'block';
+        updateTable();
+    } else {
+        alert('Wrong password');
+    }
+}
+
+function updateTable() {
+    const tbody = document.querySelector('#userTable tbody');
+    tbody.innerHTML = '';
+    users.forEach(u => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${u.name}</td><td>${u.rt}</td>`;
+        tbody.appendChild(row);
+    });
+}
+
+function exportToCSV() {
+    let csvContent = 'Name,RT Number\n';
+    users.forEach(u => csvContent += `${u.name},${u.rt}\n`);
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'doorprize.csv';
+    a.click();
+}
+
+function spinWheel() {
+    if(users.length === 0) { alert('No users registered'); return; }
+    const winnerIndex = Math.floor(Math.random() * users.length);
+    document.getElementById('winner').innerText = `Winner: ${users[winnerIndex].name} (RT ${users[winnerIndex].rt})`;
+}
+</script>
+
+</body>
+</html>
