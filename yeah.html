@@ -65,23 +65,27 @@ function registerUser() {
     if(!name || !rt) { alert('Fill all fields'); return; }
     rt = parseInt(rt, 10);
 
-    const newEntry = { name, rt };
+    const uniqueKey = name.toLowerCase() + '-' + rt;
 
     if(!adminLoggedIn) {
         // check duplicates
-        db.ref('users').orderByChild('unique').equalTo(name.toLowerCase() + '-' + rt).once('value', snapshot => {
+        db.ref('users').orderByChild('unique').equalTo(uniqueKey).once('value', snapshot => {
             if(snapshot.exists()) {
                 alert(`Name ${name} and RT ${rt} already registered!`);
             } else {
-                db.ref('users').push({ ...newEntry, unique: name.toLowerCase() + '-' + rt });
-                alert('Successfully Registered, you may close this page now.');
-                window.location.href = 'about:blank';
+                const newRef = db.ref('users').push();
+                newRef.set({ name, rt, unique: uniqueKey }).then(() => {
+                    alert('Successfully Registered, you may close this page now.');
+                    window.location.href = 'about:blank';
+                });
             }
         });
     } else {
         // admin can register multiple
-        db.ref('users').push({ ...newEntry, unique: name.toLowerCase() + '-' + rt });
-        alert(`Registered ${name} (RT ${rt}) successfully.`);
+        const newRef = db.ref('users').push();
+        newRef.set({ name, rt, unique: uniqueKey }).then(() => {
+            alert(`Registered ${name} (RT ${rt}) successfully.`);
+        });
     }
 
     document.getElementById('name').value = '';
