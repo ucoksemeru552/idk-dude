@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doorprize Registration</title>
+    <title>Doorprize Registration (Firebase)</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         input, button { margin: 10px; padding: 10px; }
@@ -11,6 +11,7 @@
         table { margin: 20px auto; border-collapse: collapse; }
         th, td { border: 1px solid #000; padding: 5px 10px; }
         .admin-btn { margin: 2px; }
+        #messages { margin-top: 20px; color: red; }
     </style>
 </head>
 <body>
@@ -36,20 +37,27 @@
         </thead>
         <tbody></tbody>
     </table>
+    <div id="messages"></div>
 
     <h2>Spin the Wheel</h2>
     <button onclick="spinWheel()">Spin</button>
     <p id="winner"></p>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
-let users = JSON.parse(localStorage.getItem('users') || '[]');
+const firebaseConfig = {
+    databaseURL: "https://doorprize-katar-06-default-rtdb.asia-southeast1.firebasedatabase.app/"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 let adminLoggedIn = false;
 const adminPass = '123';
-
-function saveUsers() {
-    localStorage.setItem('users', JSON.stringify(users));
-}
 
 function registerUser() {
     const name = document.getElementById('name').value.trim();
@@ -57,21 +65,22 @@ function registerUser() {
     if(!name || !rt) { alert('Fill all fields'); return; }
     rt = parseInt(rt, 10);
 
+    const newEntry = { name, rt };
+
     if(!adminLoggedIn) {
-        const exists = users.some(u => u.name.toLowerCase() === name.toLowerCase() && u.rt === rt);
-        if(exists) {
-            alert(`Name ${name} and RT ${rt} already registered!`);
-            return;
-        } else {
-            users.push({ name, rt });
-            saveUsers();
-            alert('Successfully Registered, you may close this page now.');
-            window.location.href = 'about:blank';
-        }
+        // check duplicates
+        db.ref('users').orderByChild('unique').equalTo(name.toLowerCase() + '-' + rt).once('value', snapshot => {
+            if(snapshot.exists()) {
+                alert(`Name ${name} and RT ${rt} already registered!`);
+            } else {
+                db.ref('users').push({ ...newEntry, unique: name.toLowerCase() + '-' + rt });
+                alert('Successfully Registered, you may close this page now.');
+                window.location.href = 'about:blank';
+            }
+        });
     } else {
-        users.push({ name, rt });
-        saveUsers();
-        updateTable();
+        // admin can register multiple
+        db.ref('users').push({ ...newEntry, unique: name.toLowerCase() + '-' + rt });
         alert(`Registered ${name} (RT ${rt}) successfully.`);
     }
 
@@ -84,56 +93,66 @@ function loginAdmin() {
     if(pass === adminPass) {
         adminLoggedIn = true;
         document.getElementById('admin-section').style.display = 'block';
-        updateTable();
+        listenUsers();
     } else {
         alert('Wrong password');
     }
 }
 
-function updateTable() {
-    const tbody = document.querySelector('#userTable tbody');
-    tbody.innerHTML = '';
-    users.forEach((u, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${u.name}</td><td>${u.rt}</td>
-                         <td><button class='admin-btn' onclick='deleteUser(${index})'>Delete</button></td>`;
-        tbody.appendChild(row);
+function listenUsers() {
+    db.ref('users').on('value', snapshot => {
+        const tbody = document.querySelector('#userTable tbody');
+        tbody.innerHTML = '';
+        document.getElementById('messages').innerHTML = '';
+        snapshot.forEach(child => {
+            const u = child.val();
+            const key = child.key;
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${u.name}</td><td>${u.rt}</td>
+                             <td><button class='admin-btn' onclick='deleteUser("${key}", "${u.name}", ${u.rt})'>Delete</button></td>`;
+            tbody.appendChild(row);
+        });
     });
 }
 
-function deleteUser(index) {
+function deleteUser(key, name, rt) {
     if(confirm('Delete this entry?')) {
-        users.splice(index, 1);
-        saveUsers();
-        updateTable();
+        db.ref('users/' + key).remove();
+        document.getElementById('messages').innerHTML = `${name}, ${rt} has been deleted`;
     }
 }
 
 function resetUsers() {
     if(confirm('Reset all users?')) {
-        users = [];
-        saveUsers();
-        updateTable();
+        db.ref('users').remove();
+        document.getElementById('messages').innerHTML = 'All users have been reset';
     }
 }
 
 function exportToCSV() {
-    let csvContent = 'Name,RT Number\n';
-    users.forEach(u => csvContent += `${u.name},${u.rt}\n`);
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'doorprize.csv';
-    a.click();
+    db.ref('users').once('value', snapshot => {
+        let csvContent = 'Name,RT Number\n';
+        snapshot.forEach(child => {
+            const u = child.val();
+            csvContent += `${u.name},${u.rt}\n`;
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'doorprize.csv';
+        a.click();
+    });
 }
 
 function spinWheel() {
-    if(users.length === 0) { alert('No users registered'); return; }
-    const winnerIndex = Math.floor(Math.random() * users.length);
-    document.getElementById('winner').innerText = `Winner: ${users[winnerIndex].name} (RT ${users[winnerIndex].rt})`;
+    db.ref('users').once('value', snapshot => {
+        const usersArr = [];
+        snapshot.forEach(child => usersArr.push(child.val()));
+        if(usersArr.length === 0) { alert('No users registered'); return; }
+        const winnerIndex = Math.floor(Math.random() * usersArr.length);
+        document.getElementById('winner').innerText = `Winner: ${usersArr[winnerIndex].name} (RT ${usersArr[winnerIndex].rt})`;
+    });
 }
-
-updateTable(); // initialize table from stored data
 </script>
 
 </body>
