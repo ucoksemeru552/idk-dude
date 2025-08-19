@@ -1,0 +1,87 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+}
+
+input, button {
+    margin: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#admin-section {
+    display: none;
+    margin-top: 20px;
+    border-top: 2px solid #eee;
+    padding-top: 20px;
+}
+
+table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.admin-btn {
+    margin: 2px;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.admin-btn:hover {
+    background-color: #c82333;
+}
+
+#messages {
+    margin-top: 15px;
+    color: green;
+    font-weight: bold;
+}
+
+#winner-section {
+    margin-top: 20px;
+}
+
+#winner {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #28a745;
+    min-height: 30px;
+}
+
+#winner-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+#winner-list li {
+    background-color: #f9f9f9;
+    margin: 5px 0;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+}
