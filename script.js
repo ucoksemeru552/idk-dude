@@ -119,11 +119,18 @@ function exportToCSV() {
             alert('No users to export.');
             return;
         }
-        let csvContent = 'Name,RT Number\n';
+
+        // Changed the header to include 'No.' and 'Nama'
+        let csvContent = 'No.,Nama,RT Number\n';
+        let counter = 1; // Start a counter for the row number
+
         snapshot.forEach(child => {
             const u = child.val();
-            csvContent += `"${u.name.replace(/"/g, '""')}",${u.rt}\n`;
+            // Added the counter to the beginning of each row
+            csvContent += `${counter},"${u.name.replace(/"/g, '""')}",${u.rt}\n`;
+            counter++; // Increment the counter for the next row
         });
+
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
