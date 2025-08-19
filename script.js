@@ -120,15 +120,15 @@ function exportToCSV() {
             return;
         }
 
-        // Changed the header to include 'No.' and 'Nama'
-        let csvContent = 'No.,Nama,RT Number\n';
-        let counter = 1; // Start a counter for the row number
+        // Use semicolons (;) for the header
+        let csvContent = 'No.;Nama;RT Number\n';
+        let counter = 1;
 
         snapshot.forEach(child => {
             const u = child.val();
-            // Added the counter to the beginning of each row
-            csvContent += `${counter},"${u.name.replace(/"/g, '""')}",${u.rt}\n`;
-            counter++; // Increment the counter for the next row
+            // Use semicolons (;) to separate the data
+            csvContent += `${counter};"${u.name.replace(/"/g, '""')}";${u.rt}\n`;
+            counter++;
         });
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
