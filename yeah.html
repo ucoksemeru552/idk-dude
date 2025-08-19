@@ -23,19 +23,7 @@
 <button onclick="loginAdmin()">Login</button>
 
 <div id="admin-section">
-    <h2>Registered Users</h2>
-    <p>Total Registered: <b id="user-count">0</b></p>
-    <button onclick="exportToCSV()">Export to CSV</button>
-    <button class="admin-btn" onclick="resetAll()">Reset All Data</button>
-    <table id="userTable">
-        <thead>
-            <tr><th>Name</th><th>RT Number</th><th>Actions</th></tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-    <hr>
-
+    
     <div id="winner-section">
         <h2>Spin the Wheel</h2>
         <p>Eligible for prize: <b id="eligible-count">0</b></p>
@@ -46,6 +34,20 @@
         <h3>🏆 Winners</h3>
         <ul id="winner-list"></ul>
     </div>
+
+    <hr>
+
+    <h2>Registered Users</h2>
+    <p>Total Registered: <b id="user-count">0</b></p>
+    <button onclick="exportToCSV()">Export to CSV</button>
+    <button class="admin-btn" onclick="resetAll()">Reset All Data</button>
+    <table id="userTable">
+        <thead>
+            <tr><th>Name</th><th>RT Number</th><th>Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
